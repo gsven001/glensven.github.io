@@ -5,6 +5,7 @@ from dash import html
 from dash.dependencies import Input, Output
 import pandas as pd
 import numpy as np
+from collections import Counter
 import plotly.graph_objs as go
 import plotly.express as px
 
@@ -13,8 +14,7 @@ csv_file_path = Path("assets/pds.csv")
 df_covid = pd.read_csv(csv_file_path)
 
 # Convert the Index 'Date of Death' to datetime
-df_covid['DATE_OF_DEATH'] = pd.to_datetime(df_covid['DATE_OF_DEATH'])
-df_covid.set_index('DATE_OF_DEATH', inplace=True)
+df_covid['DATE_OF_DEATH'] = pd.to_datetime(df_covid['DATE_OF_DEATH']).dt.date
 
 # Convert Age and Total Morbidities to Integer
 df_covid['AGE'] = pd.to_numeric(df_covid['AGE'], errors='coerce').astype('Int64')
@@ -34,11 +34,35 @@ trend_options = [
     {'label': '30 Day', 'value': 30}
 ]
 
-morbidity_list = list(df_covid['MORBIDITY'].unique())
+morbidity_list = list(df_covid['MORBIDITY'])
 
-morbidity_value = 'No Filtering'
+morbidity_counts = Counter(morbidity_list)
 
-morbidity_list.append(morbidity_value)
+# Drop Covid-19 from the list
+df_no_covid = df_covid[df_covid['MORBIDITY'] != 'COVID-19']
+
+# Extract unique values and count occurrences
+unique_values_counts = df_no_covid['MORBIDITY'].value_counts()
+
+# Sort unique values by count (most occurrences to least)
+sorted_unique_values_counts = unique_values_counts.sort_values(ascending=False)
+
+# Create a list of tuples with (value, count)
+sorted_unique_values_and_counts = [(value, count) for value, count in zip(sorted_unique_values_counts.index, sorted_unique_values_counts)]
+
+# Print the list of tuples
+# print(sorted_unique_values_and_counts)
+
+strings_list = [f"{value}" for value, count in zip(sorted_unique_values_counts.index, sorted_unique_values_counts)]
+
+# Calculate the sum of counts for each unique value
+
+sorted_morbidity_list = sorted(morbidity_counts.keys(), key=lambda x: morbidity_counts[x], reverse=True)
+
+# Sort options by the sum of counts (descending order)
+
+
+
 #---------------------------------------------------------------------------------------
 # Create the layout of the app
 app.layout = html.Div([
@@ -49,81 +73,152 @@ app.layout = html.Div([
         dcc.Dropdown(
             id='trend-statistics',
             options=trend_options,
-            value= 1,
+            value=7,
             placeholder='Select Rolling Window',
+            clearable= False,
             style={'textAlign': 'center', 'font-size': 20, 'padding': 3, 'width': 400}
-        ),html.Br(),
-        html.P("Select Morbidity"),
+        ),
+        html.P("Filter by Morbidity:"),
+        dcc.RadioItems(
+        id='radio-item',
+        options=[
+            {'label': 'No Filter', 'value': 'disable'},
+            {'label': 'Filter', 'value': 'enable'}
+        ],
+        value='disable'),
+        html.Br(),
+        html.P("Select Co-Morbidities"),
         dcc.Dropdown(
             id="morbidity-select",
-            options=[{"label": i, "value": i} for i in morbidity_list],
-            value=morbidity_list[:],
-            placeholder="All Morbidities Selected",
+            options=strings_list,
+            value=[strings_list[0]],
+            placeholder="No Morbidity Selected",
             searchable= True,
             clearable= True,
             multi=True,
-            maxHeight=500
+            maxHeight=500,
+            disabled=True,
+            style={'textAlign': 'center', 'font-size': 20, 'padding': 3, 'width': 900}
         ),
     ]),
     html.Div([#TASK 2.3: Add a division for output display
     html.Div(id='output-container', className='chart-grid', style={'display': 'flex'})])
 ])
-#TASK 2.4: Creating Callbacks
-# Define the callback function to update the input container based on the selected statistics
-
-# @app.callback(
-#     Output('morbidity-select', 'value'),
-#     Input('morbidity-select', 'options'),
-#     Input('morbidity-select', 'value')
-# )
-# def update_dropdown_value(options, selected_values):
-#     # Check if no options are selected or if selected values are not in the current options
-#     if not selected_values or any(val not in [option['value'] for option in options] for val in selected_values):
-#         # Return the original value
-#         return morbidity_value
-#     else:
-#         # Return the selected values
-#         return selected_values
 
 @app.callback(
-    Output(component_id='output-container', component_property='children'),
-    Input(component_id='trend-statistics',component_property='value'),
-    Input(component_id='morbidity-select',component_property='value'))
-def rolling_trends(time_span, morbidity):
+    [Output('morbidity-select', 'options'),
+     Output('morbidity-select', 'disabled')],
+    [Input('radio-item', 'value')]
+)
+def update_dropdown_options(selected_radio):
+    if selected_radio == 'enable':
+        options = strings_list
+        disabled = False  # Enable the dropdown
+    else:
+        options = []  # Empty options when disabled
+        disabled = True  # Disable the dropdown
+
+    return options, disabled
+
+
+@app.callback(
+    [Output(component_id='output-container', component_property='children')],
+    [Input(component_id='morbidity-select',component_property='value'),
+    Input(component_id='radio-item',component_property='value'),
+    Input(component_id='trend-statistics',component_property='value')])
+
+def rolling_trends(morbidity, selected_radio, time_span):
     # Count distinct CASE_NUMBER by Day, 7 days, 30 days
 
-    if morbidity == 'No Filtering':
-        df_covid_trend_filtered = df_covid.reset_index()
+    if selected_radio == 'disable':
+        df_covid_trend_filtered = df_covid
+        if time_span == 1:
+            df_covid_trend_daily = df_covid_trend_filtered.groupby(df_covid_trend_filtered['DATE_OF_DEATH'])[
+                'CASE_NUMBER'].nunique().reset_index()
+            R_chart1 = dcc.Graph(
+                figure=px.line(df_covid_trend_daily,
+                               x='DATE_OF_DEATH',
+                               y='CASE_NUMBER',
+                               labels={'DATE_OF_DEATH': 'Date of Death', 'CASE_NUMBER': 'Deaths'},
+                               title="Daily Total Deaths"))
+        elif time_span == 7:
+            df_covid_trend_weekly = df_covid_trend_filtered.groupby('DATE_OF_DEATH')['CASE_NUMBER'].nunique().rolling(
+                window=7).mean().reset_index()
+            R_chart1 = dcc.Graph(
+                figure=px.line(df_covid_trend_weekly,
+                               x='DATE_OF_DEATH',
+                               y='CASE_NUMBER',
+                               labels={'DATE_OF_DEATH': 'Date of Death', 'CASE_NUMBER': 'Deaths'},
+                               title="7 Day Rolling Average of Total Deaths"))
+        else:
+            df_covid_trend_monthly = df_covid_trend_filtered.groupby('DATE_OF_DEATH')['CASE_NUMBER'].nunique().rolling(
+                window=30).mean().reset_index()
+
+            R_chart1 = dcc.Graph(
+                figure=px.line(df_covid_trend_monthly,
+                               x='DATE_OF_DEATH',
+                               y='CASE_NUMBER',
+                               labels={'DATE_OF_DEATH': 'Date of Death', 'CASE_NUMBER': 'Deaths'},
+                               title="30 Day Rolling Average of Total Deaths"))
+    elif selected_radio == 'enable' and morbidity is not None:
+        df_covid_trend_filtered = df_covid[df_covid['MORBIDITY'].isin(morbidity)]
+        if time_span == 1:
+            df_covid_trend_daily = df_covid_trend_filtered.groupby(df_covid_trend_filtered['DATE_OF_DEATH'])[
+                'CASE_NUMBER'].nunique().reset_index()
+            R_chart1 = dcc.Graph(
+                figure=px.line(df_covid_trend_daily,
+                               x='DATE_OF_DEATH',
+                               y='CASE_NUMBER',
+                               labels={'DATE_OF_DEATH': 'Date of Death', 'CASE_NUMBER': 'Deaths'},
+                               title="Daily Total Deaths"))
+        elif time_span == 7:
+            df_covid_trend_weekly = df_covid_trend_filtered.groupby('DATE_OF_DEATH')['CASE_NUMBER'].nunique().rolling(
+                window=7).mean().reset_index()
+            R_chart1 = dcc.Graph(
+                figure=px.line(df_covid_trend_weekly,
+                               x='DATE_OF_DEATH',
+                               y='CASE_NUMBER',
+                               labels={'DATE_OF_DEATH': 'Date of Death', 'CASE_NUMBER': 'Deaths'},
+                               title="7 Day Rolling Average of Total Deaths"))
+        else:
+            df_covid_trend_monthly = df_covid_trend_filtered.groupby('DATE_OF_DEATH')['CASE_NUMBER'].nunique().rolling(
+                window=30).mean().reset_index()
+
+            R_chart1 = dcc.Graph(
+                figure=px.line(df_covid_trend_monthly,
+                               x='DATE_OF_DEATH',
+                               y='CASE_NUMBER',
+                               labels={'DATE_OF_DEATH': 'Date of Death', 'CASE_NUMBER': 'Deaths'},
+                               title="30 Day Rolling Average of Total Deaths"))
     else:
-        df_covid_trend_filtered = df_covid[df_covid['MORBIDITY'].isin(morbidity)].reset_index()
 
-    if time_span == 1:
-        df_covid_trend_daily = df_covid_trend_filtered.groupby(df_covid_trend_filtered['DATE_OF_DEATH'])['CASE_NUMBER'].nunique().reset_index()
-        R_chart1 = dcc.Graph(
-            figure=px.line(df_covid_trend_daily,
-                           x='DATE_OF_DEATH',
-                           y='CASE_NUMBER',
-                           labels={'DATE_OF_DEATH': 'Date of Death', 'CASE_NUMBER': 'Deaths'},
-                           title="Daily Total Deaths"))
-    elif time_span == 7:
-        df_covid_trend_weekly = df_covid_trend_filtered.groupby('DATE_OF_DEATH')['CASE_NUMBER'].nunique().rolling(window=7).sum().reset_index()
-        R_chart1 = dcc.Graph(
-            figure=px.line(df_covid_trend_weekly,
-                           x='DATE_OF_DEATH',
-                           y='CASE_NUMBER',
-                           labels={'DATE_OF_DEATH': 'Date of Death', 'CASE_NUMBER': 'Deaths'},
-                           title="7 Day Rolling Average of Total Deaths"))
-    else:
-        df_covid_trend_monthly = df_covid_trend_filtered.groupby('DATE_OF_DEATH')['CASE_NUMBER'].nunique().rolling(window=30).sum().reset_index()
+        if time_span == 1:
+            df_covid_trend_daily = df_covid.groupby(df_covid['DATE_OF_DEATH'])['CASE_NUMBER'].nunique().reset_index()
+            R_chart1 = dcc.Graph(
+                figure=px.line(df_covid_trend_daily,
+                               x='DATE_OF_DEATH',
+                               y='CASE_NUMBER',
+                               labels={'DATE_OF_DEATH': 'Date of Death', 'CASE_NUMBER': 'Deaths'},
+                               title="Daily Total Deaths"))
+        elif time_span == 7:
+            df_covid_trend_weekly = df_covid.groupby('DATE_OF_DEATH')['CASE_NUMBER'].nunique().rolling(window=7).mean().reset_index()
+            R_chart1 = dcc.Graph(
+                figure=px.line(df_covid_trend_weekly,
+                               x='DATE_OF_DEATH',
+                               y='CASE_NUMBER',
+                               labels={'DATE_OF_DEATH': 'Date of Death', 'CASE_NUMBER': 'Deaths'},
+                               title="7 Day Rolling Average of Total Deaths"))
+        else:
+            df_covid_trend_monthly = df_covid.groupby('DATE_OF_DEATH')['CASE_NUMBER'].nunique().rolling(window=30).mean().reset_index()
 
-        R_chart1 = dcc.Graph(
-            figure=px.line(df_covid_trend_monthly,
-                           x='DATE_OF_DEATH',
-                           y='CASE_NUMBER',
-                           labels={'DATE_OF_DEATH': 'Date of Death', 'CASE_NUMBER': 'Deaths'},
-                           title="30 Day Rolling Average of Total Deaths"))
+            R_chart1 = dcc.Graph(
+                figure=px.line(df_covid_trend_monthly,
+                               x='DATE_OF_DEATH',
+                               y='CASE_NUMBER',
+                               labels={'DATE_OF_DEATH': 'Date of Death', 'CASE_NUMBER': 'Deaths'},
+                               title="30 Day Rolling Average of Total Deaths"))
 
-    print(df_covid['MORBIDITY'].unique())
+
     return [
         html.Div(className='chart-item', children=[html.Div(children=R_chart1)]),
         # html.Div(className='chart-item', children=[html.Div(children=R_chart3), html.Div(children=R_chart4)])
