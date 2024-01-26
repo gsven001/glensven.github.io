@@ -3,27 +3,27 @@
 /* Style for the main container */
 
 .app-container {
-    background-color: #f4f4f4;
-    width: 100%;
+    background-color: #ebf1fc;
     max-width: none;
     display: flex;
 }
 
 .app-controls {
     background-color: #536aed;
-    margin-top: 20px;
+    margin-top: 0px;
     padding: 0rem 2rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: calc(100vh - 5.5rem);
+
 }
 
 .app-graphs {
-    /* background-color: #f4f4f4; */
-    padding: 0rem 2rem;
+    background-color: #ebf1fc;
+    padding: 2rem 2rem;
     min-height: calc(100vh - 5.5rem);
-    margin-top: 20px;
+    margin-top: 0px;
+    align-items: center;
 
 }
 
