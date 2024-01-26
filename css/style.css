@@ -1,0 +1,28 @@
+/* styles.css */
+
+/* Style for the main container */
+
+.app-container {
+    display: flex;
+}
+
+.app-controls {
+    flex: 1;
+    margin-top: 20px;
+    padding: 0rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: calc(100vh - 5.5rem);
+}
+
+.app-graphs {
+    flex: 2; /* Adjust this value to control the width of the graphs */
+    background-color: #f4f4f4;
+    padding: 0rem 2rem;
+    min-height: calc(100vh - 5.5rem);
+}
+
+
+
+/* Add more styles as needed */

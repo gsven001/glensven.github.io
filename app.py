@@ -13,7 +13,7 @@ from datetime import datetime as dt
 
 # Load Cook County Covid Mortality Data
 csv_file_path = Path("assets/pds_final.csv")
-css_file_path = Path("css/style.css")
+
 df_covid = pd.read_csv(csv_file_path, dtype={19: str, 20: str})
 
 # Convert the Index 'Date of Death' to datetime
@@ -24,7 +24,7 @@ df_covid['AGE'] = pd.to_numeric(df_covid['AGE'], errors='coerce').astype('Int64'
 df_covid['TOTAL_MORBIDITIES'] = pd.to_numeric(df_covid['TOTAL_MORBIDITIES'], errors='coerce').astype('Int64')
 
 # Initialize the Dash app
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, external_stylesheets=["css/style.css"])
 
 # Set the title of the dashboard
 app.title = "Covid-Related Deaths, Cook County, IL Dashboard"
@@ -69,58 +69,56 @@ sorted_morbidity_list = sorted(morbidity_counts.keys(), key=lambda x: morbidity_
 #---------------------------------------------------------------------------------------
 # Layout of the app
 app.layout = html.Div([
+    html.Link(
+        rel='stylesheet',
+        href="css/style.css"
+    ),
     html.Div([
-        html.Link(
-            rel='stylesheet',
-            href=css_file_path
-        ),
         html.Div(
-                [
-            html.Div(
-                id="left-column",
-                children=[
-
-            html.H1("Covid-Related Deaths, Cook County, IL Dashboard",
-                    style={'textAlign': 'center', 'color': '#503D36', 'fontSize': 24}),
-            html.Br(),
-            html.Label("Select Rolling Window:"),
-            dcc.Dropdown(
-                id='trend-statistics',
-                options=trend_options,
-                value=7,
-                placeholder='Select Rolling Window',
-                clearable=False,
-                style={'textAlign': 'center', 'font-size': 20, 'padding': 3, 'width': 400}
-            ),
-            html.P("Select a Date Range:"),
-            dcc.DatePickerRange(
-                id='date-slider',
-                start_date=df_covid['DATE_OF_DEATH'].min(),
-                end_date=df_covid['DATE_OF_DEATH'].max(),
-                display_format='YYYY-MM-DD',
-                style={'textAlign': 'center', 'font-size': 20, 'padding': 3, 'width': 400}
-            ),
-            html.P("Select General Morbidity Category"),
-            dcc.Dropdown(
-                id="morbidity-select",
-                options=sorted_morbidity_list,
-                value=sorted_morbidity_list[:5],
-                placeholder="No General Morbidity Selected",
-                searchable=True,
-                clearable=True,
-                multi=True,
-                maxHeight=300,
-                # disabled=True,
-                style={'textAlign': 'center', 'font-size': 20, 'padding': 5, 'width': 400}
-            ),
-        ], className='app-controls'),
+            id="app-controls",
+            children=[
+                html.H1("Covid-Related Deaths, Cook County, IL Dashboard",
+                        style={'textAlign': 'center', 'color': '#503D36', 'fontSize': 24}),
+                html.Br(),
+                html.Label("Select Rolling Window:"),
+                dcc.Dropdown(
+                    id='trend-statistics',
+                    options=trend_options,
+                    value=7,
+                    placeholder='Select Rolling Window',
+                    clearable=False,
+                    style={'textAlign': 'center', 'font-size': 20, 'padding': 3, 'width': 400}
+                ),
+                html.P("Select a Date Range:"),
+                dcc.DatePickerRange(
+                    id='date-slider',
+                    start_date=df_covid['DATE_OF_DEATH'].min(),
+                    end_date=df_covid['DATE_OF_DEATH'].max(),
+                    display_format='YYYY-MM-DD',
+                    style={'textAlign': 'center', 'font-size': 20, 'padding': 3, 'width': 400}
+                ),
+                html.P("Select General Morbidity Category"),
+                dcc.Dropdown(
+                    id="morbidity-select",
+                    options=sorted_morbidity_list,
+                    value=sorted_morbidity_list[:5],
+                    placeholder="No General Morbidity Selected",
+                    searchable=True,
+                    clearable=True,
+                    multi=True,
+                    maxHeight=300,
+                    # disabled=True,
+                    style={'textAlign': 'center', 'font-size': 20, 'padding': 5, 'width': 400}
+                ),
+                ],
+            className='app-controls'),
         html.Div(
-            id="right-column",
+            id="app-graphs",
             children=[html.Div(id='output-container', style={'display': 'flex'})],
             className='app-graphs')
     ], className='app-container')
-    ])
-    ])
+])
+
 @app.callback(
     [Output(component_id='output-container', component_property='children')],
     [Input(component_id='morbidity-select', component_property='value'),
