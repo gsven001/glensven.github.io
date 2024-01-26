@@ -93,7 +93,8 @@ app.layout = html.Div([
                 dcc.DatePickerRange(
                     id='date-slider',
                     start_date=df_covid['DATE_OF_DEATH'].min(),
-                    end_date=df_covid['DATE_OF_DEATH'].max(),
+                    end_date=dt(2022, 7, 1),
+                    # df_covid['DATE_OF_DEATH'].max(),
                     display_format='YYYY-MM-DD',
                     style={'textAlign': 'center', 'font-size': 20, 'padding': 3, 'width': 400}
                 ),
@@ -107,17 +108,19 @@ app.layout = html.Div([
                     clearable=True,
                     multi=True,
                     maxHeight=300,
-                    # disabled=True,
                     style={'textAlign': 'center', 'font-size': 20, 'padding': 5, 'width': 400}
                 ),
-                ],
-            className='app-controls'),
+            ],
+            className='app-controls'
+        ),
         html.Div(
             id="app-graphs",
-            children=[html.Div(id='output-container', style={'display': 'flex'})],
-            className='app-graphs')
-    ], className='app-container')
+            children=[html.Div(id='output-container')],
+            className='app-graphs'
+        ),
+    ], style={'display': 'flex'})
 ])
+
 
 @app.callback(
     [Output(component_id='output-container', component_property='children')],
@@ -144,7 +147,7 @@ def rolling_trends(morbidity, time_span, start_date, end_date):
                 morbid_data = df_covid_trend_daily[df_covid_trend_daily['GENERAL_MORBIDITY'] == morbid]
                 trace = go.Scatter(x=morbid_data['DATE_OF_DEATH'], y=morbid_data['CASE_NUMBER'], mode='lines', name=morbid)
                 fig.add_trace(trace)
-
+                legend_size = len(trace.name) * 10
         elif time_span == 7:
             # df_filtered = filtered_by_date[filtered_by_date['GENERAL_MORBIDITY'].isin(morbidity)]
             df_covid_trend_weekly = filtered_by_date.groupby(['DATE_OF_DEATH', 'GENERAL_MORBIDITY'])['CASE_NUMBER'].nunique().reset_index()
@@ -157,11 +160,12 @@ def rolling_trends(morbidity, time_span, start_date, end_date):
                 morbid_data = df_covid_trend_weekly[df_covid_trend_weekly['GENERAL_MORBIDITY'] == morbid]
                 trace = go.Scatter(x=morbid_data['DATE_OF_DEATH'], y=morbid_data['CASE_NUMBER'], mode='lines', name=morbid)
                 fig.add_trace(trace)
+                legend_size = len(trace.name) * 10
         else:
             # df_filtered = filtered_by_date[filtered_by_date['GENERAL_MORBIDITY'].isin(morbidity)]
             df_covid_trend_monthly = filtered_by_date.groupby(['DATE_OF_DEATH', 'GENERAL_MORBIDITY'])['CASE_NUMBER'].nunique().reset_index()
             df_covid_trend_monthly['CASE_NUMBER'] = df_covid_trend_monthly.groupby('GENERAL_MORBIDITY')['CASE_NUMBER'].rolling(window=30, min_periods=1).mean().reset_index(level=0, drop=True)
-            df_filtered['CASE_NUMBER'] = df_filtered['CASE_NUMBER'].fillna(0)
+            df_covid_trend_monthly['CASE_NUMBER'] = df_covid_trend_monthly['CASE_NUMBER'].fillna(0)
             fig.update_xaxes(title_text='Date of Death')
             fig.update_yaxes(title_text='Deaths')
             fig.update_layout(title_text="30 Day Rolling Average of Total Deaths")
@@ -169,7 +173,7 @@ def rolling_trends(morbidity, time_span, start_date, end_date):
                 morbid_data = df_covid_trend_monthly[df_covid_trend_monthly['GENERAL_MORBIDITY'] == morbid]
                 trace = go.Scatter(x=morbid_data['DATE_OF_DEATH'], y=morbid_data['CASE_NUMBER'], mode='lines', name=morbid)
                 fig.add_trace(trace)
-        legend_size = len(trace.name) * 10
+                legend_size = len(trace.name) * 10
         fig.update_layout(width=1000 + legend_size, height=600)
         fig.update_layout(legend=dict(x=1, y=1, xanchor='left', yanchor='top', traceorder='normal'))
     else:

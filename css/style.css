@@ -3,11 +3,13 @@
 /* Style for the main container */
 
 .app-container {
+    width: 100%;
+    max-width: none;
     display: flex;
 }
 
 .app-controls {
-    flex: 1;
+    background-color: #536aed;
     margin-top: 20px;
     padding: 0rem 2rem;
     display: flex;
@@ -17,11 +19,11 @@
 }
 
 .app-graphs {
-    flex: 2; /* Adjust this value to control the width of the graphs */
     background-color: #f4f4f4;
     padding: 0rem 2rem;
     min-height: calc(100vh - 5.5rem);
 }
+
 
 
 
