@@ -87,7 +87,7 @@ app.layout = html.Div([
                     value=7,
                     placeholder='Select Rolling Window',
                     clearable=False,
-                    style={'textAlign': 'center', 'font-size': 20, 'padding': 3, 'width': 400}
+                    style={'textAlign': 'center', 'fontSize': 20, 'padding': 3, 'width': 400}
                 ),
                 html.P("Select a Date Range:"),
                 dcc.DatePickerRange(
@@ -96,7 +96,7 @@ app.layout = html.Div([
                     end_date=dt(2022, 7, 1),
                     # df_covid['DATE_OF_DEATH'].max(),
                     display_format='YYYY-MM-DD',
-                    style={'textAlign': 'center', 'font-size': 20, 'padding': 3, 'width': 400}
+                    style={'textAlign': 'center', 'fontSize': 20, 'padding': 3, 'width': 400}
                 ),
                 html.P("Select General Morbidity Category"),
                 dcc.Dropdown(
@@ -108,7 +108,7 @@ app.layout = html.Div([
                     clearable=True,
                     multi=True,
                     maxHeight=300,
-                    style={'textAlign': 'center', 'font-size': 20, 'padding': 5, 'width': 400}
+                    style={'textAlign': 'center', 'fontSize': 20, 'padding': 5, 'width': 400}
                 ),
             ],
             className='app-controls'
