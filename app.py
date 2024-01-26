@@ -13,6 +13,7 @@ from datetime import datetime as dt
 
 # Load Cook County Covid Mortality Data
 csv_file_path = Path("assets/pds_final.csv")
+css_file_path = Path("css/style.css")
 df_covid = pd.read_csv(csv_file_path, dtype={19: str, 20: str})
 
 # Convert the Index 'Date of Death' to datetime
@@ -66,12 +67,12 @@ sorted_morbidity_list = sorted(morbidity_counts.keys(), key=lambda x: morbidity_
 
 
 #---------------------------------------------------------------------------------------
-# Create the layout of the app
+# Layout of the app
 app.layout = html.Div([
     html.Div([
         html.Link(
             rel='stylesheet',
-            href='/Users/glensvenningsen/Documents/GitHub/glensven.github.io/css/layout.css'  # Assuming you put styles.css in the 'assets' folder
+            href=css_file_path
         ),
         html.Div(
                 [
