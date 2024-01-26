@@ -3,6 +3,7 @@
 /* Style for the main container */
 
 .app-container {
+    background-color: #f4f4f4;
     width: 100%;
     max-width: none;
     display: flex;
@@ -19,9 +20,11 @@
 }
 
 .app-graphs {
-    background-color: #f4f4f4;
+    /* background-color: #f4f4f4; */
     padding: 0rem 2rem;
     min-height: calc(100vh - 5.5rem);
+    margin-top: 20px;
+
 }
 
 

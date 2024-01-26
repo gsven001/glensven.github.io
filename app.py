@@ -24,7 +24,7 @@ df_covid['AGE'] = pd.to_numeric(df_covid['AGE'], errors='coerce').astype('Int64'
 df_covid['TOTAL_MORBIDITIES'] = pd.to_numeric(df_covid['TOTAL_MORBIDITIES'], errors='coerce').astype('Int64')
 
 # Initialize the Dash app
-app = dash.Dash(__name__, external_stylesheets=["css/style.css"])
+app = dash.Dash(__name__, external_stylesheets=["assets/css/style.css"])
 
 # Set the title of the dashboard
 app.title = "Covid-Related Deaths, Cook County, IL Dashboard"
@@ -71,7 +71,7 @@ sorted_morbidity_list = sorted(morbidity_counts.keys(), key=lambda x: morbidity_
 app.layout = html.Div([
     html.Link(
         rel='stylesheet',
-        href="css/style.css"
+        href="assets/css/style.css"
     ),
     html.Div([
         html.Div(
