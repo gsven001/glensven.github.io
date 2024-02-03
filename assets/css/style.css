@@ -6,6 +6,7 @@
     background-color: #ebf1fc;
     max-width: none;
     display: flex;
+    flex-direction: row;
 }
 
 .app-controls {
@@ -13,6 +14,7 @@
     margin-top: 0px;
     padding: 0rem 2rem;
     flex-direction: column;
+    alignItems: center;
 
 }
 
@@ -21,8 +23,18 @@
     padding: 2rem 2rem;
     min-height: calc(100vh - 5.5rem);
     margin-top: 0px;
-    align-items: center;
+    alignItems: center;
 
+.banner {
+    background-color: #ebf1fc;
+    alignItems: left;
+    text-align: center;
+    padding: 0rem 100rem;
+}
 
+.banner Img {
+    position: relative;
+    padding: 0rem 2rem;
+}
 
 /* Add more styles as needed */
