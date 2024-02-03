@@ -193,6 +193,7 @@ app.layout = html.Div([
                             ],
 
                         ),
+                        # Select Race
                         html.Div(
                             children=[
                                 html.Div([html.P("Select Age-Groups:"),
