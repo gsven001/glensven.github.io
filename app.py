@@ -11,14 +11,211 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 from datetime import datetime as dt
 
+# Define your CSS style sheets
+external_css = [
+    "assets/clinical-analytics.css",
+    "assets/base.css",
+]
+
 # Initialize the Dash app
-app = dash.Dash(__name__, external_stylesheets=["assets/css/style.css"])
+app = dash.Dash(__name__, meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
+                external_stylesheets=external_css)
 
 server = app.server
 app.config.suppress_callback_exceptions = True
 
 # Set the title of the dashboard
 app.title = "Covid-Related Deaths, Cook County, IL Dashboard"
+
+# Create the dropdown menu options
+trend_options = [
+    {'label': 'Daily', 'value': 1},
+    {'label': '7 Day', 'value': 7},
+    {'label': '30 Day', 'value': 30}
+]
+
+
+def description_card():
+    """
+
+    :return: A Div containing dashboard title & descriptions.
+    """
+    return html.Div(
+        id="description-card",
+        children=[
+            html.H5("Covid Dashboard"),
+            html.H3("Cook County Covid Related Deaths Dashboard"),
+            html.Div(
+                id="intro",
+                children="Explore the Cook County medical examiner database to determine the demographic characteristics Covid-19 related deaths.",
+            ),
+        ],
+    )
+
+
+def generate_control_card():
+    """
+
+    :return: A Div containing controls for graphs.
+    """
+    return html.Div(
+        id="control-card",
+        children=[
+            html.P("Select Daily, 7-Day, or 30-day Average"),
+            dcc.Dropdown(
+                id='trend-statistics',
+                options=trend_options,
+                value=30,
+                placeholder='Select Rolling Window',
+                clearable=False,
+            ),
+            html.Br(),
+            html.P("Select Date Range"),
+            dcc.DatePickerRange(
+                id="date-picker-select",
+                start_date=df_no_covid['DATE_OF_DEATH'].min(),
+                end_date=dt(2022, 7, 1),
+                display_format='YYYY-MM-DD',
+            ),
+            html.Div(
+                id="control-card-checks",
+                children=[
+
+                    html.Div(
+                        [html.Br(),
+                         html.P("Select a Sex:"),
+                         dcc.Checklist(
+                             id='sex-select',
+                             options=[
+                                 {
+                                     "label": html.Div(['All Sexes'],
+                                                       style={'fontSize': 14}),
+                                     "value": 'All'
+                                 },
+                                 {
+                                     "label": html.Div(['Female'], style={'fontSize': 14}),
+                                     "value": 'Female'
+                                 },
+                                 {
+                                     "label": html.Div(['Male'], style={'fontSize': 14}),
+                                     "value": 'Male'
+                                 },
+                             ],
+                             value=['All'],
+                             labelStyle={"display": "flex"},
+                             inline=True
+                         ),
+                         html.Br(),
+                         html.P("Select a Race:"),
+                         dcc.Checklist(
+                             id='race-select',
+                             options=[
+                                 {
+                                     "label": html.Div(['All Races'], style={'fontSize': 14}),
+                                     "value": "All"
+                                 },
+                                 {
+                                     "label": html.Div(['White'], style={'fontSize': 14}),
+                                     "value": "White"
+                                 },
+                                 {
+                                     "label": html.Div(['Black'], style={'fontSize': 14}),
+                                     "value": "Black"
+                                 },
+                                 {
+                                     "label": html.Div(['Asian'], style={'fontSize': 14}),
+                                     "value": "Asian"
+                                 },
+                                 {
+                                     "label": html.Div(['Other'], style={'fontSize': 14}),
+                                     "value": "Other"
+                                 },
+                                 {
+                                     "label": html.Div(['Am. Indian'], style={'fontSize': 14}),
+                                     "value": "Am. Indian"
+                                 },
+                                 {
+                                     "label": html.Div(['Unknown'], style={'fontSize': 14}),
+                                     "value": "Unknown"
+                                 }
+                             ],
+                             value=['All'],
+                             labelStyle={"display": "flex"},
+                         )
+                         ])
+                    ,
+                    html.Div(
+                        children=[
+                            html.Div([html.Br(),
+                                      html.P("Select Age-Groups:"),
+                                      dcc.Checklist(
+                                          id='age-selections',
+                                          options=[
+                                              {
+                                                  "label": html.Div(['All Ages'], style={'fontSize': 14}),
+                                                  "value": "All"
+                                              },
+                                              {
+                                                  "label": html.Div(['< 18 Yrs'], style={'fontSize': 14}),
+                                                  "value": "< 18 Yrs"
+                                              },
+                                              {
+                                                  "label": html.Div(['19-29 Yrs'], style={'fontSize': 14}),
+                                                  "value": "19-29 Yrs"
+                                              },
+                                              {
+                                                  "label": html.Div(['30-39 Yrs'], style={'fontSize': 14}),
+                                                  "value": "30-39 Yrs"
+                                              },
+                                              {
+                                                  "label": html.Div(['40-49 Yrs'], style={'fontSize': 14}),
+                                                  "value": "40-49 Yrs"
+                                              },
+                                              {
+                                                  "label": html.Div(['50-59 Yrs'], style={'fontSize': 14}),
+                                                  "value": "50-59 Yrs"
+                                              },
+                                              {
+                                                  "label": html.Div(['60-69 Yrs'], style={'fontSize': 14}),
+                                                  "value": "60-69 Yrs"
+                                              },
+                                              {
+                                                  "label": html.Div(['70-79 Yrs'], style={'fontSize': 14}),
+                                                  "value": "70-79 Yrs"
+                                              },
+                                              {
+                                                  "label": html.Div(['80-89 Yrs'], style={'fontSize': 14}),
+                                                  "value": "80-89 Yrs"
+                                              },
+                                              {
+                                                  "label": html.Div(['90-99 Yrs'], style={'fontSize': 14}),
+                                                  "value": "90-99 Yrs"
+                                              },
+                                              {
+                                                  "label": html.Div(['100 Yrs <'], style={'fontSize': 14}),
+                                                  "value": "10O Yrs <"
+                                              },
+                                          ],
+                                          value=['All'],
+                                          labelStyle={"display": "flex"}
+                                      )])])
+
+                ], style={"display": "flex"}
+            ),
+            html.Br(),
+            html.P("Select General Morbidity Category"),
+            dcc.Dropdown(
+                id="morbidity-select",
+                options=[{'label': value, 'value': value} for value in sorted_morbidity_list],
+                value=sorted_morbidity_list[:1],
+                placeholder="No General Morbidity Selected",
+                searchable=True,
+                clearable=False,
+                multi=True,
+            )
+        ]
+    )
+
 
 # Load Cook County Covid Mortality Data
 file_path = Path("assets/real_cut_fix.csv")
@@ -52,257 +249,62 @@ strings_list = [f"{value}" for value, count in zip(sorted_unique_values_counts.i
 
 sorted_morbidity_list = sorted(unique_values_counts.keys(), key=lambda x: unique_values_counts[x], reverse=True)
 
-# Sort options by the sum of counts (descending order)
-
-
-# ---------------------------------------------------------------------------------
-# Create the dropdown menu options
-trend_options = [
-    {'label': 'Daily', 'value': 1},
-    {'label': '7 Day', 'value': 7},
-    {'label': '30 Day', 'value': 30}
-]
-# ---------------------------------------------------------------------------------------
 # Layout of the app
-app.layout = html.Div([
-    html.Link(
-        rel='stylesheet',
-        href="assets/css/style.css"
-    ),
-    html.Div([
-
+app.layout = html.Div(
+    id="app-container",
+    children=[
         html.Div([
             # App Controls Section
             html.Div(
                 id="app-controls",
                 children=[
+                    # Banner
+                    # html.Div(
+                    #     id="banner",
+                    #     className="banner",
+                    #     children=[html.Img(src=app.get_asset_url("plotly_logo.png"))],
+                    # ),
+                    # Left column
                     html.Div(
-                        [
-                            html.Div(
-                                [
-                                    # Logo and Title
-                                    html.Div(
-                                        id="banner",
-                                        className="banner",
-                                        children=[
-                                            html.Img(
-                                                src="assets/images/wordcloud_morbidities.png",
-                                                style={'width': 150, 'height': 150}
-                                            ),
-                                        ],
-                                    ),
-                                    html.Br(),
-                                    html.Div(
-                                        children=[
-                                            html.H1(
-                                                "Covid-Related Deaths Dashboard",
-                                                style={'textAlign': 'center', 'color': '#ffffff', 'fontSize': 30,
-                                                       'margin-left': '20px'}
-                                            ),
-                                            html.H1("Cook County, IL",
-                                                    style={'textAlign': 'center', 'color': '#503D36', 'fontSize': 22}),
-                                        ], className="banner"
-                                    )
-                                ], className="banner", style={'display': 'flex'}
-                            ),
-
-                        ]
+                        id="left-column",
+                        className="four columns",
+                        children=[description_card(), generate_control_card()]
                     ),
-                    html.Br(),
-                    # Dropdowns and Checklists
-                    html.Label("Select Rolling Window:"),
-                    dcc.Dropdown(
-                        id='trend-statistics',
-                        options=trend_options,
-                        value=30,
-                        placeholder='Select Rolling Window',
-                        clearable=False,
-                        style={'textAlign': 'center', 'fontSize': 20, 'padding': 3, 'width': 400}
-                    ),
-                    html.P("Select a Date Range:"),
-                    dcc.DatePickerRange(
-                        id='date-slider',
-                        start_date=df_no_covid['DATE_OF_DEATH'].min(),
-                        end_date=dt(2022, 7, 1),
-                        display_format='YYYY-MM-DD',
-                        style={'textAlign': 'center', 'fontSize': 20, 'padding': 3, 'width': 400}
-                    ),
-                    html.Div([
-                        html.Div(
-                            children=[
-                                html.P("Select a Sex:"),
-                                dcc.Checklist(
-                                    id='sex-select',
-                                    options=[
-                                        {
-                                            "label": html.Div(['All Sexes'],
-                                                              style={'color': '#dff4f5', 'fontSize': 20}),
-                                            "value": 'All'
-                                        },
-                                        {
-                                            "label": html.Div(['Female'], style={'color': '#dff4f5', 'fontSize': 20}),
-                                            "value": 'Female'
-                                        },
-                                        {
-                                            "label": html.Div(['Male'], style={'color': '#dff4f5', 'fontSize': 20}),
-                                            "value": 'Male'
-                                        },
-                                    ],
-                                    value=['All'],
-                                    labelStyle={"display": "flex", "align-items": "left"},
-                                    inline=True
-                                ),
-                                html.P("Select a Race:"),
-                                dcc.Checklist(
-                                    id='race-select',
-                                    options=[
-                                        {
-                                            "label": html.Div(['All Races'],
-                                                              style={'color': '#dff4f5', 'fontSize': 20}),
-                                            "value": "All"
-                                        },
-                                        {
-                                            "label": html.Div(['White'], style={'color': '#dff4f5', 'fontSize': 20}),
-                                            "value": "White"
-                                        },
-                                        {
-                                            "label": html.Div(['Black'], style={'color': '#dff4f5', 'fontSize': 20}),
-                                            "value": "Black"
-                                        },
-                                        {
-                                            "label": html.Div(['Asian'], style={'color': '#dff4f5', 'fontSize': 20}),
-                                            "value": "Asian"
-                                        },
-                                        {
-                                            "label": html.Div(['Other'], style={'color': '#dff4f5', 'fontSize': 20}),
-                                            "value": "Other"
-                                        },
-                                        {
-                                            "label": html.Div(['Am. Indian'],
-                                                              style={'color': '#dff4f5', 'fontSize': 20}),
-                                            "value": "Am. Indian"
-                                        },
-                                        {
-                                            "label": html.Div(['Unknown'], style={'color': '#dff4f5', 'fontSize': 20}),
-                                            "value": "Unknown"
-                                        }
-                                    ],
-                                    value=['All'],
-                                    labelStyle={"display": "flex", "align-items": "center"},
-                                )
-                            ],
-
-                        ),
-                        # Select Race
-                        html.Div(
-                            children=[
-                                html.Div([html.P("Select Age-Groups:"),
-                                          dcc.Checklist(
-                                              id='age-selections',
-                                              options=[
-                                                  {
-                                                      "label": html.Div(['All Ages'],
-                                                                        style={'color': '#dff4f5', 'fontSize': 20}),
-                                                      "value": "All"
-                                                  },
-                                                  {
-                                                      "label": html.Div(['< 18 Yrs'],
-                                                                        style={'color': '#dff4f5', 'fontSize': 20}),
-                                                      "value": "< 18 Yrs"
-                                                  },
-                                                  {
-                                                      "label": html.Div(['19-29 Yrs'],
-                                                                        style={'color': '#dff4f5', 'fontSize': 20}),
-                                                      "value": "19-29 Yrs"
-                                                  },
-                                                  {
-                                                      "label": html.Div(['30-39 Yrs'],
-                                                                        style={'color': '#dff4f5', 'fontSize': 20}),
-                                                      "value": "30-39 Yrs"
-                                                  },
-                                                  {
-                                                      "label": html.Div(['40-49 Yrs'],
-                                                                        style={'color': '#dff4f5', 'fontSize': 20}),
-                                                      "value": "40-49 Yrs"
-                                                  },
-                                                  {
-                                                      "label": html.Div(['50-59 Yrs'],
-                                                                        style={'color': '#dff4f5', 'fontSize': 20}),
-                                                      "value": "50-59 Yrs"
-                                                  },
-                                                  {
-                                                      "label": html.Div(['60-69 Yrs'],
-                                                                        style={'color': '#dff4f5', 'fontSize': 20}),
-                                                      "value": "60-69 Yrs"
-                                                  },
-                                                  {
-                                                      "label": html.Div(['70-79 Yrs'],
-                                                                        style={'color': '#dff4f5', 'fontSize': 20}),
-                                                      "value": "70-79 Yrs"
-                                                  },
-                                                  {
-                                                      "label": html.Div(['80-89 Yrs'],
-                                                                        style={'color': '#dff4f5', 'fontSize': 20}),
-                                                      "value": "80-89 Yrs"
-                                                  },
-                                                  {
-                                                      "label": html.Div(['90-99 Yrs'],
-                                                                        style={'color': '#dff4f5', 'fontSize': 20}),
-                                                      "value": "90-99 Yrs"
-                                                  },
-                                                  {
-                                                      "label": html.Div(['100 Yrs <'],
-                                                                        style={'color': '#dff4f5', 'fontSize': 20}),
-                                                      "value": "10O Yrs <"
-                                                  },
-                                              ],
-                                              value=['All'],
-                                              labelStyle={"display": "flex", "align-items": "center"},
-                                          )], style={'paddingLeft': '25px', 'alignItems': 'center'})])
-                    ], style={"display": "flex", 'alignItems': 'center'}),
-                    html.P("Select General Morbidity Category"),
-                    dcc.Dropdown(
-                        id="morbidity-select",
-                        options=[{'label': value, 'value': value} for value in sorted_morbidity_list],
-                        value=sorted_morbidity_list[:1],
-                        placeholder="No General Morbidity Selected",
-                        searchable=True,
-                        clearable=False,
-                        multi=True,
-                        maxHeight=300,
-                        style={'textAlign': 'center', 'fontSize': 20, 'padding': 5, 'width': 400}
-                    ),
-                ],
-                className='app-controls',
-                style={'display': 'flex', 'height': '100vh', 'width': '30vw', "align-items": "center"}
-            ),
-
-            # Graphs Section
-            html.Div(
-                id="app-graphs",
-                children=[
-                    dcc.Tabs(
-                        id='tabs-select',
-                        value='tab-1',
+                    # Graphs Section
+                    html.Div(
+                        id="right-column",
+                        className="eight columns",
                         children=[
-                            dcc.Tab(label='Per Capita', value='Per Capita'),
-                            dcc.Tab(label='Total', value='tab-2'),
-                        ]),
-                    html.Div(id='output-container')],
-                className='app-graphs'
+                            html.Div([
+                                dcc.Tabs(
+                                    id='tabs-select',
+                                    value='Per Capita',
+                                    children=[
+                                        dcc.Tab(label='Per Capita', value='Per Capita',
+                                                style={'borderBottom': '1px solid #d6d6d6',
+                                                       'padding': '5px',
+                                                       'fontWeight': 'bold'}),
+                                        dcc.Tab(label='Total', value='Total',
+                                                style={'borderBottom': '1px solid #d6d6d6',
+                                                       'padding': '5px',
+                                                       'fontWeight': 'bold'}),
+                                    ], className="custom-tabs", style={'width': '300px', 'height': '50px'})
+                            ], className="dash-tab"),
+                            html.Div(id='output-container')],
+                        # className='app-graphs'
 
-            ),
-        ], style={'display': 'flex', 'height': '100vh', 'width': '100vw'})
-    ], style={'display': 'flex', 'height': '100vh', 'width': '100vw'})
-])
+                    ),
+                ])
+        ])
+    ])
 
 
 @app.callback(
     [Output(component_id='output-container', component_property='children')],
     [Input(component_id='morbidity-select', component_property='value'),
      Input(component_id='trend-statistics', component_property='value'),
-     Input(component_id='date-slider', component_property='start_date'),
-     Input(component_id='date-slider', component_property='end_date'),
+     Input(component_id='date-picker-select', component_property='start_date'),
+     Input(component_id='date-picker-select', component_property='end_date'),
      Input(component_id='age-selections', component_property='value'),
      Input(component_id='sex-select', component_property='value'),
      Input(component_id='race-select', component_property='value'),
@@ -376,7 +378,7 @@ def rolling_trends(morbidity, time_span, start_date, end_date, age, sex, race, t
     fig.update_xaxes(title_text='Date of Death')
     fig.update_yaxes(title_text='Deaths')
     fig.update_layout(showlegend=True)
-    fig.update_layout(width=1000, height=600)
+    fig.update_layout(width=1200, height=600)
     fig.update_layout(legend=dict(x=1, y=1, xanchor='left', yanchor='top', traceorder='normal'))
     fig.update_layout(legend={'title': 'Age-Race-Gender-Category'})
 
