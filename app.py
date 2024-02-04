@@ -270,7 +270,6 @@ app.layout = html.Div(
                         className="four columns",
                         children=[description_card(), generate_control_card()]
                     ),
-
                     # Graphs Section
                     html.Div(
                         id="right-column",
