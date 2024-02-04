@@ -37,8 +37,9 @@ hr {
 }
 
 H5 {
-    color: #2c8cff;
+    color: #a31826;
     font-weight: 300;
+    font-size: 30px;
 }
 
 H5, H3 {
@@ -46,82 +47,21 @@ H5, H3 {
 }
 
 #left-column {
-    margin-top: 20px;
-    padding: 0rem 2rem;
+    margin-top: 0px;
+    padding: 2rem 3rem;
     display: flex;
     flex-direction: column;
-    alignItems: center;
-    min-height: calc(100vh - 5.5rem);
+    alignItems: center !important;
+    min-height: calc(100vh - 0rem);
+    background-color: #08016e;
+    color: #faf7f7;
 }
 
 #right-column {
     background-color: #f4f4f4;
-    padding: 0rem 2rem;
-    min-height: calc(100vh - 5.5rem);
+    padding: 2rem 0rem;
+    min-height: calc(100vh - 0rem);
 }
-
-.table-row {
-    height: 63px;
-    vertical-align: middle;
-    font-size: 13px;
-}
-
-.wait_time_graph > div, .patient_score_graph > div {
-    height: 100% !important;
-    width: 100% !important;
-}
-
-.draglayer {
-    cursor: pointer !important;
-}
-
-#intro {
-    margin: 20px 0px;
-    font-family: "Helvetica Neue", sans-serif;
-    text-align: justify;
-}
-
-#control-card > p {
-    font-weight: bold;
-}
-
-#patient_volume_card, #wait_time_card {
-    background-color: #FFFFFF;
-    padding: 1rem;
-    margin: auto;
-    margin-top: 20px;
-}
-
-#patient_volume_card > b, #wait_time_card > b {
-    line-height: 2.5;
-}
-
-#wait_time_card {
-    margin: 20px 0px;
-}
-
-#patient_volume_hm {
-    height: 400px;
-}
-
-.table-row:nth-child(even) {
-    background-color: #f2f2f2;
-}
-
-.row-department > b {
-    display: table-cell;
-    vertical-align: middle;
-}
-
-#header_wait_time_min, #header_care_score {
-    display: table;
-}
-
-#header_wait_time_min > b, #header_care_score > b {
-    display: table-cell;
-    vertical-align: middle;
-}
-
 
 /*
   ##Device = Most of the Smartphones Mobiles / ipad (Portrait)
@@ -156,7 +96,7 @@ H5, H3 {
     }
 
     #right-column {
-        padding: 0rem 0.5rem;
+        padding: 0rem 0rem;
     }
 
     #reset-btn-outer {
@@ -172,7 +112,6 @@ H5, H3 {
     .table-row:nth-child(even), .table-row:nth-child(odd) {
         background-color: #FFFFFF;
     }
-
     #header {
         display: none;
     }

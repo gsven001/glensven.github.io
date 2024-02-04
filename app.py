@@ -11,8 +11,15 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 from datetime import datetime as dt
 
+# Define your CSS style sheets
+external_css = [
+    "assets/clinical-analytics.css",
+    "assets/base.css",
+]
+
 # Initialize the Dash app
-app = dash.Dash(__name__, meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}])
+app = dash.Dash(__name__, meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
+                external_stylesheets=external_css)
 
 server = app.server
 app.config.suppress_callback_exceptions = True
@@ -37,10 +44,10 @@ def description_card():
         id="description-card",
         children=[
             html.H5("Covid Dashboard"),
-            html.H3("Welcome to the Cook County Covid Related Deaths Dashboard"),
+            html.H3("Cook County Covid Related Deaths Dashboard"),
             html.Div(
                 id="intro",
-                children="Explore the Cook County Medical Examiner Database to determine the demographic characteristics of Victims of Covid-19",
+                children="Explore the Cook County medical examiner database to determine the demographic characteristics Covid-19 related deaths.",
             ),
         ],
     )
@@ -243,44 +250,54 @@ strings_list = [f"{value}" for value, count in zip(sorted_unique_values_counts.i
 sorted_morbidity_list = sorted(unique_values_counts.keys(), key=lambda x: unique_values_counts[x], reverse=True)
 
 # Layout of the app
-app.layout = html.Div([
+app.layout = html.Div(
+    id="app-container",
+    children=[
+        html.Div([
+            # App Controls Section
+            html.Div(
+                id="app-controls",
+                children=[
+                    # Banner
+                    # html.Div(
+                    #     id="banner",
+                    #     className="banner",
+                    #     children=[html.Img(src=app.get_asset_url("plotly_logo.png"))],
+                    # ),
+                    # Left column
+                    html.Div(
+                        id="left-column",
+                        className="four columns",
+                        children=[description_card(), generate_control_card()]
+                    ),
 
-    html.Div([
-        # App Controls Section
-        html.Div(
-            id="app-controls",
-            children=[
-                # Banner
-                # html.Div(
-                #     id="banner",
-                #     className="banner",
-                #     children=[html.Img(src=app.get_asset_url("plotly_logo.png"))],
-                # ),
-                # Left column
-                html.Div(
-                    id="left-column",
-                    className="four columns",
-                    children=[description_card(), generate_control_card()]
-                ),
+                    # Graphs Section
+                    html.Div(
+                        id="right-column",
+                        className="eight columns",
+                        children=[
+                            html.Div([
+                                dcc.Tabs(
+                                    id='tabs-select',
+                                    value='Per Capita',
+                                    children=[
+                                        dcc.Tab(label='Per Capita', value='Per Capita',
+                                                style={'borderBottom': '1px solid #d6d6d6',
+                                                       'padding': '5px',
+                                                       'fontWeight': 'bold'}),
+                                        dcc.Tab(label='Total', value='Total',
+                                                style={'borderBottom': '1px solid #d6d6d6',
+                                                       'padding': '5px',
+                                                       'fontWeight': 'bold'}),
+                                    ], className="custom-tabs", style={'width': '300px', 'height': '50px'})
+                            ], className="dash-tab"),
+                            html.Div(id='output-container')],
+                        # className='app-graphs'
 
-                # Graphs Section
-                html.Div(
-                    id="app-graphs",
-                    children=[
-                        dcc.Tabs(
-                            id='tabs-select',
-                            value='tab-1',
-                            children=[
-                                dcc.Tab(label='Per Capita', value='Per Capita'),
-                                dcc.Tab(label='Total', value='tab-2'),
-                            ]),
-                        html.Div(id='output-container')],
-                    className='app-graphs'
-
-                ),
-            ], style={'display': 'flex', 'height': '100vh', 'width': '100vw'})
-    ], style={'display': 'flex', 'height': '100vh', 'width': '100vw'})
-])
+                    ),
+                ])
+        ])
+    ])
 
 
 @app.callback(
@@ -362,7 +379,7 @@ def rolling_trends(morbidity, time_span, start_date, end_date, age, sex, race, t
     fig.update_xaxes(title_text='Date of Death')
     fig.update_yaxes(title_text='Deaths')
     fig.update_layout(showlegend=True)
-    fig.update_layout(width=1000, height=600)
+    fig.update_layout(width=1200, height=600)
     fig.update_layout(legend=dict(x=1, y=1, xanchor='left', yanchor='top', traceorder='normal'))
     fig.update_layout(legend={'title': 'Age-Race-Gender-Category'})
 
