@@ -549,11 +549,6 @@ def bar_functions(morbidity, time_span, start_date, end_date, age, sex, race, ta
                 barmode='group',  # 'group' for grouped bars, 'stack' for stacked bars
             )
 
-    # fig.update_xaxes(
-    #     tickvals=['All-All-All-ALL DEATHS', 'All-Black-All-ALL DEATHS', 'All-White-All-ALL DEATHS'],
-    #     # Specify the values you want to update
-    #     ticktext=['Total Pop.', 'Black Pop.', 'White Pop.']  # Specify the corresponding labels
-    # )
     fig.update_layout(showlegend=False)
     fig.update_layout(width=1200, height=600)
     fig.update_layout(legend=dict(x=1, y=1, xanchor='left', yanchor='top', traceorder='normal'))
