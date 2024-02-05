@@ -5,7 +5,7 @@ dash-table==5.0.0
 dask==2022.2.0
 debugpy==1.6.0
 decorator==5.1.1
-gunicorn==19.7.1
+gunicorn==21.2.0
 html5lib==1.1
 ipython==7.32.0
 ipython-genutils==0.2.0
