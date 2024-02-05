@@ -1,0 +1,22 @@
+METRIC,TOTAL_POP,PERCENT_POP,GENDER,RACE,AGE_GROUP
+Total Population,5109292,1,All,All,All
+Male,2498444,0.489,Male,All,All
+Female,2610848,0.511,Female,All,All
+White,3326149,0.651,All,White,All
+Black,1205793,0.236,All,Black,All
+American Indian,40874,0.008,All,American Indian,All
+Asian,424071,0.083,All,Asian,All
+Native Hawaiian,5109,0.001,All,Native Hawaiian,All
+Two or More Races,112404,0.022,All,Two or More Races,All
+Hispanic,1343744,0.263,All,Hispanic,All
+"White, not Hispanic",2099919,0.411,All,"White, not Hispanic",All
+Under 18 years,1067842,0.209,All,All,Under 18 years
+19 to 29,740847,0.145,All,All,19 to 29
+30 to 39,771503,0.151,All,All,30 to 39
+40 to 49,694864,0.136,All,All,40 to 49
+50 to 59,683112,0.1337,All,All,50 to 59
+60 to 69,577350,0.113,All,All,60 to 69
+70 to 79,372978,0.073,All,All,70 to 79
+80 to 89,173716,0.034,All,All,80 to 89
+90 to 99,25546,0.005,All,All,90 to 99
+100 plus,1277,0.0003,All,All,100 plus

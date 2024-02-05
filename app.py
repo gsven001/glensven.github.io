@@ -1,7 +1,6 @@
 from pathlib import Path
 import dash
-from dash import dcc
-from dash import html
+from dash import dcc, html
 from dash.dependencies import Input, Output
 import pandas as pd
 import numpy as np
@@ -47,7 +46,8 @@ def description_card():
             html.H3("Cook County Covid Related Deaths Dashboard"),
             html.Div(
                 id="intro",
-                children="Explore the Cook County medical examiner database to determine the demographic characteristics Covid-19 related deaths.",
+                children="Explore the Cook County medical examiner database to determine the demographic characteristics of Covid-19 related deaths.",
+                style={'fontSize': 14},
             ),
         ],
     )
@@ -61,6 +61,7 @@ def generate_control_card():
     return html.Div(
         id="control-card",
         children=[
+            html.Br(),
             html.P("Select Daily, 7-Day, or 30-day Average"),
             dcc.Dropdown(
                 id='trend-statistics',
@@ -68,6 +69,7 @@ def generate_control_card():
                 value=30,
                 placeholder='Select Rolling Window',
                 clearable=False,
+                style={'color': '#000000'}
             ),
             html.Br(),
             html.P("Select Date Range"),
@@ -129,14 +131,6 @@ def generate_control_card():
                                  {
                                      "label": html.Div(['Other'], style={'fontSize': 14}),
                                      "value": "Other"
-                                 },
-                                 {
-                                     "label": html.Div(['Am. Indian'], style={'fontSize': 14}),
-                                     "value": "Am. Indian"
-                                 },
-                                 {
-                                     "label": html.Div(['Unknown'], style={'fontSize': 14}),
-                                     "value": "Unknown"
                                  }
                              ],
                              value=['All'],
@@ -193,7 +187,7 @@ def generate_control_card():
                                               },
                                               {
                                                   "label": html.Div(['100 Yrs <'], style={'fontSize': 14}),
-                                                  "value": "10O Yrs <"
+                                                  "value": "100 Yrs <"
                                               },
                                           ],
                                           value=['All'],
@@ -212,17 +206,20 @@ def generate_control_card():
                 searchable=True,
                 clearable=False,
                 multi=True,
+                style={'color': '#000000'}
             )
         ]
     )
 
 
 # Load Cook County Covid Mortality Data
-file_path = Path("assets/real_cut_fix.csv")
+file_path = Path("assets/final_covid_2.csv")
 
 demo_path = Path("assets/demo.csv")
 
-df_no_covid = pd.read_csv(file_path, low_memory=False)
+df_covid = pd.read_csv(file_path, low_memory=False)
+
+df_no_covid = df_covid[df_covid['GENERAL_MORBIDITY'] != 'COVID-19']
 
 # Create list of Morbidities
 morbidity_list = list(df_no_covid['GENERAL_MORBIDITY'])
@@ -290,13 +287,22 @@ app.layout = html.Div(
                                                        'fontWeight': 'bold'}),
                                     ], className="custom-tabs", style={'width': '300px', 'height': '50px'})
                             ], className="dash-tab"),
-                            html.Div(id='output-container')],
+                            html.Div(id='output-container', style={'alignItems': 'center'}),
+                            html.Div(id='output-container-2')],
+                        style={'alignItems': 'center'},
                         # className='app-graphs'
 
                     ),
                 ])
         ])
     ])
+
+
+def filter_data_by_date_range(df, start_date, end_date, tabs):
+    date_filter = (pd.to_datetime(df['DATE_OF_DEATH']) >= pd.to_datetime(start_date)) & (
+            pd.to_datetime(df['DATE_OF_DEATH']) <= pd.to_datetime(end_date))
+
+    return df_no_covid[date_filter] if tabs == 'Per Capita' else df_no_covid[date_filter]
 
 
 @app.callback(
@@ -311,20 +317,18 @@ app.layout = html.Div(
      Input(component_id='tabs-select', component_property='value'),
      ])
 def rolling_trends(morbidity, time_span, start_date, end_date, age, sex, race, tabs):
-    # Filter data based on selected date range
-    if tabs == 'Per Capita':
-        filtered_df = df_no_covid[(pd.to_datetime(df_no_covid['DATE_OF_DEATH']) >= pd.to_datetime(start_date)) & (
-                pd.to_datetime(df_no_covid['DATE_OF_DEATH']) <= pd.to_datetime(end_date))]
-    else:
-        filtered_df = df_no_covid[(pd.to_datetime(df_no_covid['DATE_OF_DEATH']) >= pd.to_datetime(start_date)) & (
-                pd.to_datetime(df_no_covid['DATE_OF_DEATH']) <= pd.to_datetime(end_date))]
-    # Filter out NA in column
-    # filtered_df['GENDER'] = filtered_df['GENDER'].dropna()
-    # Filter to set NA to All
-    # filtered_df['RACE'] = filtered_df['RACE'].fillna('All')
+    filtered_df = filter_data_by_date_range(df_covid, start_date, end_date, tabs)
 
-    filtered_data = filtered_df.groupby(['DATE_OF_DEATH', 'AGE_GROUP', 'RACE', 'GENDER', 'GENERAL_MORBIDITY'])[
+    filtered_data = \
+        filtered_df.groupby(['DATE_OF_DEATH', 'AGE_GROUP', 'RACE', 'GENDER', 'GENERAL_MORBIDITY', 'TOTAL_POP'])[
+            'CASE_NUMBER'].nunique().reset_index()
+
+    filtered_data['PER_CAP'] = (filtered_data['CASE_NUMBER'] / filtered_data['TOTAL_POP']) * 100000
+
+    filtered_data_bar = filtered_df.groupby(['AGE_GROUP', 'RACE', 'GENDER', 'GENERAL_MORBIDITY', 'TOTAL_POP'])[
         'CASE_NUMBER'].nunique().reset_index()
+
+    filtered_data_bar['PER_CAP'] = (filtered_data_bar['CASE_NUMBER'] / filtered_data_bar['TOTAL_POP']) * 100000
 
     fig = make_subplots(rows=1, cols=1, subplot_titles=(""))
 
@@ -338,8 +342,52 @@ def rolling_trends(morbidity, time_span, start_date, end_date, age, sex, race, t
                     race_data = sex_data[sex_data['RACE'] == races]
                     for morbid in morbidity:
                         morbid_data = race_data[race_data['GENERAL_MORBIDITY'] == morbid]
-                        trace = go.Scatter(x=morbid_data['DATE_OF_DEATH'], y=morbid_data['CASE_NUMBER'], mode='lines',
-                                           name=f"{group}-{races}-{gender}-{morbid}")
+                        if tabs == 'Per Capita':
+                            if (morbid.title() == 'All Deaths') & (group == 'All') & (races == 'All') & (
+                                    gender == 'All'):
+                                x_label = f"Total Pop."
+                            elif (morbid.title() == 'All Deaths') & (group == 'All') & (gender == 'All'):
+                                x_label = f"{races} Pop."
+                            elif (morbid.title() == 'All Deaths') & (races == 'All') & (gender == 'All'):
+                                x_label = f"{group} Pop."
+                            elif (group == 'All') & (races == 'All') & (gender == 'All'):
+                                x_label = f"Pop. with {morbid.title()}"
+                            elif (morbid.title() == 'All Deaths') & (group == 'All') & (races == 'All'):
+                                x_label = f"{gender} Pop."
+                            elif (morbid.title() == 'All Deaths') & (group == 'All'):
+                                x_label = f"{gender}, {races} Pop."
+                            elif morbid.title() == 'All Deaths':
+                                x_label = f"Ages: {group} for {gender}, {races} Pop."
+                            else:
+                                x_label = f"Ages: {group} for {gender}, {races} Pop. with {morbid.title()}"
+                            trace = go.Scatter(x=morbid_data['DATE_OF_DEATH'], y=morbid_data['PER_CAP'],
+                                               mode='lines',
+                                               name=x_label)
+                            fig.update_yaxes(title_text='Deaths Per Capita (Deaths Per 100,000)')
+                            fig.update_layout(title_text="Total Daily Deaths per Capita")
+                        else:
+                            if (morbid.title() == 'All Deaths') & (group == 'All') & (races == 'All') & (
+                                    gender == 'All'):
+                                x_label = f"Total Pop."
+                            elif (morbid.title() == 'All Deaths') & (group == 'All') & (gender == 'All'):
+                                x_label = f"{races} Pop."
+                            elif (morbid.title() == 'All Deaths') & (races == 'All') & (gender == 'All'):
+                                x_label = f"{group} Pop."
+                            elif (group == 'All') & (races == 'All') & (gender == 'All'):
+                                x_label = f"Pop. with {morbid.title()}"
+                            elif (morbid.title() == 'All Deaths') & (group == 'All') & (races == 'All'):
+                                x_label = f"{gender} Pop."
+                            elif (morbid.title() == 'All Deaths') & (group == 'All'):
+                                x_label = f"{gender}, {races} Pop."
+                            elif morbid.title() == 'All Deaths':
+                                x_label = f"Ages: {group} for {gender}, {races} Pop."
+                            else:
+                                x_label = f"Ages: {group} for {gender}, {races} Pop. with {morbid.title()}"
+                            trace = go.Scatter(x=morbid_data['DATE_OF_DEATH'], y=morbid_data['CASE_NUMBER'],
+                                               mode='lines',
+                                               name=x_label)
+                            fig.update_layout(title_text="Total Deaths")
+                            fig.update_yaxes(title_text='Deaths')
                         fig.add_trace(trace)
     elif time_span == 7:
         fig.update_layout(title_text="7 Day Rolling Average of Total Deaths")
@@ -351,14 +399,39 @@ def rolling_trends(morbidity, time_span, start_date, end_date, age, sex, race, t
                     race_data = sex_data[sex_data['RACE'] == races]
                     for morbid in morbidity:
                         morbid_data = race_data[race_data['GENERAL_MORBIDITY'] == morbid]
-                        morbid_data['ROLLING_AVG'] = morbid_data.groupby(['AGE_GROUP', 'GENDER', 'GENERAL_MORBIDITY'])[
-                            'CASE_NUMBER'].transform(lambda x: x.rolling(window=7, min_periods=1).mean())
-                        morbid_data['ROLLING_AVG'] = morbid_data['ROLLING_AVG'].fillna(0)
+                        if tabs == 'Per Capita':
+                            morbid_data.loc[:, 'ROLLING_AVG'] = \
+                                morbid_data.groupby(['AGE_GROUP', 'RACE', 'GENDER', 'GENERAL_MORBIDITY'])[
+                                    'PER_CAP'].transform(lambda x: x.rolling(window=7, min_periods=1).mean())
+                            fig.update_yaxes(title_text='Deaths Per Capita (Deaths Per 100,000)')
+                            fig.update_layout(title_text="7 Day Rolling Average of Total Deaths per Capita")
+                        else:
+                            morbid_data['ROLLING_AVG'] = \
+                                morbid_data.groupby(['AGE_GROUP', 'RACE', 'GENDER', 'GENERAL_MORBIDITY'])[
+                                    'CASE_NUMBER'].transform(lambda x: x.rolling(window=7, min_periods=1).mean())
+                            fig.update_yaxes(title_text='Deaths')
+                            fig.update_layout(title_text="7 Day Rolling Average of Total Deaths")
+                        # morbid_data[:, 'ROLLING_AVG'] = morbid_data['ROLLING_AVG'].fillna(0)
+                        if (morbid.title() == 'All Deaths') & (group == 'All') & (races == 'All') & (gender == 'All'):
+                            x_label = f"Total Pop."
+                        elif (morbid.title() == 'All Deaths') & (group == 'All') & (gender == 'All'):
+                            x_label = f"{races} Pop."
+                        elif (morbid.title() == 'All Deaths') & (races == 'All') & (gender == 'All'):
+                            x_label = f"{group} Pop."
+                        elif (group == 'All') & (races == 'All') & (gender == 'All'):
+                            x_label = f"Pop. with {morbid.title()}"
+                        elif (morbid.title() == 'All Deaths') & (group == 'All') & (races == 'All'):
+                            x_label = f"{gender} Pop."
+                        elif (morbid.title() == 'All Deaths') & (group == 'All'):
+                            x_label = f"{gender}, {races} Pop."
+                        elif morbid.title() == 'All Deaths':
+                            x_label = f"Ages: {group} for {gender}, {races} Pop."
+                        else:
+                            x_label = f"Ages: {group} for {gender}, {races} Pop. with {morbid.title()}"
                         trace = go.Scatter(x=morbid_data['DATE_OF_DEATH'], y=morbid_data['ROLLING_AVG'], mode='lines',
-                                           name=f"{group}-{races}-{gender}-{morbid}")
+                                           name=x_label)
                         fig.add_trace(trace)
     else:
-        fig.update_layout(title_text="30 Day Rolling Average of Total Deaths")
         for group in age:
             age_data = filtered_data[filtered_data['AGE_GROUP'] == group]
             for gender in sex:
@@ -367,20 +440,123 @@ def rolling_trends(morbidity, time_span, start_date, end_date, age, sex, race, t
                     race_data = sex_data[sex_data['RACE'] == races]
                     for morbid in morbidity:
                         morbid_data = race_data[race_data['GENERAL_MORBIDITY'] == morbid]
-                        morbid_data['ROLLING_AVG'] = \
-                            morbid_data.groupby(['AGE_GROUP', 'RACE', 'GENDER', 'GENERAL_MORBIDITY'])[
-                                'CASE_NUMBER'].transform(lambda x: x.rolling(window=30, min_periods=1).mean())
-                        morbid_data['ROLLING_AVG'] = morbid_data['ROLLING_AVG'].fillna(0)
+                        if tabs == 'Per Capita':
+                            morbid_data.loc[:, 'ROLLING_AVG'] = \
+                                morbid_data.groupby(['AGE_GROUP', 'RACE', 'GENDER', 'GENERAL_MORBIDITY'])[
+                                    'PER_CAP'].transform(lambda x: x.rolling(window=30, min_periods=1).mean())
+                            fig.update_yaxes(title_text='Deaths Per Capita (Deaths Per 100,000)')
+                            fig.update_layout(title_text="30 Day Rolling Average of Total Deaths per Capita")
+                        else:
+                            morbid_data['ROLLING_AVG'] = \
+                                morbid_data.groupby(['AGE_GROUP', 'RACE', 'GENDER', 'GENERAL_MORBIDITY'])[
+                                    'CASE_NUMBER'].transform(lambda x: x.rolling(window=30, min_periods=1).mean())
+                            fig.update_yaxes(title_text='Deaths')
+                            fig.update_layout(title_text="30 Day Rolling Average of Total Deaths")
+                        morbid_data.loc[:, 'ROLLING_AVG'] = morbid_data['ROLLING_AVG'].fillna(0)
+                        if (morbid.title() == 'All Deaths') & (group == 'All') & (races == 'All') & (gender == 'All'):
+                            x_label = f"Total Pop."
+                        elif (morbid.title() == 'All Deaths') & (group == 'All') & (gender == 'All'):
+                            x_label = f"{races} Pop."
+                        elif (morbid.title() == 'All Deaths') & (races == 'All') & (gender == 'All'):
+                            x_label = f"{group} Pop."
+                        elif (group == 'All') & (races == 'All') & (gender == 'All'):
+                            x_label = f"Pop. with {morbid.title()}"
+                        elif (morbid.title() == 'All Deaths') & (group == 'All') & (races == 'All'):
+                            x_label = f"{gender} Pop."
+                        elif (morbid.title() == 'All Deaths') & (group == 'All'):
+                            x_label = f"{gender}, {races} Pop."
+                        elif morbid.title() == 'All Deaths':
+                            x_label = f"Ages: {group} for {gender}, {races} Pop."
+                        else:
+                            x_label = f"Ages: {group} for {gender}, {races} Pop. with {morbid.title()}"
                         trace = go.Scatter(x=morbid_data['DATE_OF_DEATH'], y=morbid_data['ROLLING_AVG'], mode='lines',
-                                           name=f"{group}-{races}-{gender}-{morbid}")
+                                           name=x_label)
                         fig.add_trace(trace)
 
     fig.update_xaxes(title_text='Date of Death')
-    fig.update_yaxes(title_text='Deaths')
     fig.update_layout(showlegend=True)
     fig.update_layout(width=1200, height=600)
     fig.update_layout(legend=dict(x=1, y=1, xanchor='left', yanchor='top', traceorder='normal'))
-    fig.update_layout(legend={'title': 'Age-Race-Gender-Category'})
+    fig.update_layout(legend={'title': 'Demographic Group'})
+
+    return [dcc.Graph(figure=fig)]
+
+
+@app.callback(
+    [Output(component_id='output-container-2', component_property='children')],
+    [Input(component_id='morbidity-select', component_property='value'),
+     Input(component_id='trend-statistics', component_property='value'),
+     Input(component_id='date-picker-select', component_property='start_date'),
+     Input(component_id='date-picker-select', component_property='end_date'),
+     Input(component_id='age-selections', component_property='value'),
+     Input(component_id='sex-select', component_property='value'),
+     Input(component_id='race-select', component_property='value'),
+     Input(component_id='tabs-select', component_property='value'),
+     ])
+def bar_functions(morbidity, time_span, start_date, end_date, age, sex, race, tabs):
+    filtered_df = filter_data_by_date_range(df_no_covid, start_date, end_date, tabs)
+
+    filtered_data_bar = filtered_df.groupby(['AGE_GROUP', 'RACE', 'GENDER', 'GENERAL_MORBIDITY', 'TOTAL_POP'])[
+        'CASE_NUMBER'].nunique().reset_index()
+
+    filtered_data_bar['PER_CAP'] = (filtered_data_bar['CASE_NUMBER'] / filtered_data_bar['TOTAL_POP']) * 100000
+
+    fig = make_subplots(rows=1, cols=1, subplot_titles=(""))
+
+    for index, row in filtered_data_bar[
+        filtered_data_bar['AGE_GROUP'].isin(age) & filtered_data_bar['RACE'].isin(race) & filtered_data_bar[
+            'GENDER'].isin(sex) & filtered_data_bar['GENERAL_MORBIDITY'].isin(morbidity)].iterrows():
+        if (row['GENERAL_MORBIDITY'].title() == 'All Deaths') & (row['AGE_GROUP'] == 'All') & (row['RACE'] == 'All') & (
+                row['GENDER'] == 'All'):
+            x_label = f"Total Pop."
+        elif (row['GENERAL_MORBIDITY'].title() == 'All Deaths') & (row['AGE_GROUP'] == 'All') & (
+                row['GENDER'] == 'All'):
+            x_label = f"{row['RACE']} Pop."
+        elif (row['GENERAL_MORBIDITY'].title() == 'All Deaths') & (row['RACE'] == 'All') & (row['GENDER'] == 'All'):
+            x_label = f"{row['AGE_GROUP']} Pop."
+        elif (row['AGE_GROUP'] == 'All') & (row['RACE'] == 'All') & (row['GENDER'] == 'All'):
+            x_label = f"Pop. with {row['GENERAL_MORBIDITY'].title()}"
+        elif (row['GENERAL_MORBIDITY'].title() == 'All Deaths') & (row['AGE_GROUP'] == 'All') & (row['RACE'] == 'All'):
+            x_label = f"{row['GENDER']} Pop."
+        elif (row['GENERAL_MORBIDITY'].title() == 'All Deaths') & (row['AGE_GROUP'] == 'All'):
+            x_label = f"{row['GENDER']}, {row['RACE']} Pop."
+        elif row['GENERAL_MORBIDITY'].title() == 'All Deaths':
+            x_label = f"Ages: {row['AGE_GROUP']} for {row['GENDER']}, {row['RACE']} Pop."
+        else:
+            x_label = f"Ages: {row['AGE_GROUP']} for {row['GENDER']}, {row['RACE']} Pop. with {row['GENERAL_MORBIDITY'].title()}"
+        if tabs == 'Per Capita':
+            fig.add_trace(go.Bar(
+                x=[x_label],  # x-axis category for each row
+                y=[row['PER_CAP']],  # value for each row
+                alignmentgroup=True
+            ))
+            fig.update_layout(
+                title='Total Deaths per Capita',
+                xaxis_title='Demographic Group',
+                yaxis_title='Deaths per Capita (Deaths per 100,000)',
+                barmode='group',  # 'group' for grouped bars, 'stack' for stacked bars
+            )
+        else:
+            fig.add_trace(go.Bar(
+                x=[x_label],  # x-axis category for each row
+                y=[row['CASE_NUMBER']],  # value for each row
+                alignmentgroup=True
+            ))
+            fig.update_layout(
+                title='Total Deaths',
+                xaxis_title='Demographic Group',
+                yaxis_title='Deaths',
+                barmode='group',  # 'group' for grouped bars, 'stack' for stacked bars
+            )
+
+    # fig.update_xaxes(
+    #     tickvals=['All-All-All-ALL DEATHS', 'All-Black-All-ALL DEATHS', 'All-White-All-ALL DEATHS'],
+    #     # Specify the values you want to update
+    #     ticktext=['Total Pop.', 'Black Pop.', 'White Pop.']  # Specify the corresponding labels
+    # )
+    fig.update_layout(showlegend=False)
+    fig.update_layout(width=1200, height=600)
+    fig.update_layout(legend=dict(x=1, y=1, xanchor='left', yanchor='top', traceorder='normal'))
 
     return [dcc.Graph(figure=fig)]
 
