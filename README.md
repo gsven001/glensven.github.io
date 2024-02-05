@@ -1,58 +1,34 @@
-![image](https://user-images.githubusercontent.com/103902448/164163511-37d22660-905c-4355-a6f4-91c6eee2d1a4.png)
-# Unemployables Portfolio Template
-A template for the Unemployables who need to showcase their creative work, whatever that may be.
+# Glen Svenningsen Portfolio
+Welcome to my GitHub Profolio! Thanks for stopping by.
 <br /><br />
-**Demo:** https://ndoherty-xyz.github.io/unemployables-portfolio-template/
+**Demo:** 
 <br />
 <br />
 
 #### Table of Contents:
-<a href="https://github.com/ndoherty-xyz/unemployables-portfolio-template#about-this-template">About this template</a></br>
-<a href="https://github.com/ndoherty-xyz/unemployables-portfolio-template#getting-started">Getting started</a></br>
-<a href="https://github.com/ndoherty-xyz/unemployables-portfolio-template#how-to-customize-this-template">How to customize this template</a></br>
-&nbsp;&nbsp;&nbsp;<a href="https://github.com/ndoherty-xyz/unemployables-portfolio-template#creating-a-new-project-page-and-adding-it-to-the-homepage">Creating a new project page</a></br>
-&nbsp;&nbsp;&nbsp;<a href="https://github.com/ndoherty-xyz/unemployables-portfolio-template#adding-images-to-the-project-gallery">Adding gallery images</a></br>
-<a href="https://github.com/ndoherty-xyz/unemployables-portfolio-template#publishing-with-github-pages">Publishing with Github Pages</a></br>
+<a href="https://github.com/ndoherty-xyz/unemployables-portfolio-template#about-me">About Me</a></br>
+<a href="https://github.com/ndoherty-xyz/unemployables-portfolio-template#my-career-goals">My Career Goals</a></br>
+<a href="https://github.com/ndoherty-xyz/unemployables-portfolio-template#projects">Projects</a></br>
 <br />
 <br />
 
-## About this template
-After seeing the mission of Unemployables (https://unemployables.io/) to help people become self-employed and grow their businesses, I immediately thought about helping people build portfolios. It's something that I've helped friends with in the past and really enjoyed doing. <br /><br />
-This template is mobile friendly, so you won't have to worry about your site not working on phones.
+## About Me
+Hey I am Glen, a Data Engineer. <br /><br />
 <br />
 <br />
 
-**The goals of this template are:**
-- To be a starting point for someone who's never touched web development but wants to build their own portfolio website. 
-- Help keep costs of running a portfolio website low by publishing the website on Github Pages for free (instructions further down).
+**My Career Goals**
+- Gotta Catch them All. 
+- Have a heart so true.
 <br />
 <br />
 
-## Getting started
-**If you haven't used Git / Github before, here's some guides to get you started:**
-- Basics of git: https://www.freecodecamp.org/news/learn-the-basics-of-git-in-under-10-minutes-da548267cc91/
-- Forking a repository: https://docs.github.com/en/get-started/quickstart/fork-a-repo
+## Projects
+**Here are a lists of projects I am showcasing:**
+- Covid Dashboard
+- TBD
 <br />
 
-**Template instructions:**
-1. Click the `Use As Template` button above and name your new repository (it should be set to public).
-2. Clone your newly created repo to your local machine.
-3. Navigate to the cloned repo on your machine and open `index.html` with your browser.
-4. Open the repo folder in your favorite code editor and start editing. (Make sure to refresh the browser to see the code changes you make!)
-5. Publish your site by pushing your commits to your repo.
-6. Set up Github Pages (guide further down!)
-<br />
-<br />
-
-## How to customize this template
-**All changes that need to be made are commented in the code with a `TODO` tag.**
-Search for it and you'll find all the changes you need to make. That being said, there are some high level things to know:
-
-- Image assets that you add for projects, header photo, or the favicon should go in the `assets/images` folder
-- For every new project page, make a copy of `project-template.html` and keep it in the `project-pages` folder
-- All styling is located in the `css` folder, have at it if you feel like changing up the styling.
-- The `js` folder holds one script file that you can add any custom Javascript into.
-<br />
 
 ### Creating a new project page and adding it to the homepage
 1. Make a copy of `project-template.html` in the `project-pages` folder and rename it to `<project-name>.html`
