@@ -5,6 +5,7 @@ dash-table==5.0.0
 dask==2022.2.0
 debugpy==1.6.0
 decorator==5.1.1
+gunicorn==19.7.1
 html5lib==1.1
 ipython==7.32.0
 ipython-genutils==0.2.0
@@ -20,7 +21,7 @@ mistune==0.8.4
 mypy-extensions==0.4.3
 nodeenv==1.7.0
 numpy==1.26.0
-pandas==1.5.3
+pandas==2.2.0
 pandocfilters==1.5.0
 pastel==0.2.1
 pathspec==0.10.2
