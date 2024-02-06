@@ -485,7 +485,6 @@ def rolling_trends(morbidity, time_span, start_date, end_date, age, sex, race, t
 @app.callback(
     [Output(component_id='output-container-2', component_property='children')],
     [Input(component_id='morbidity-select', component_property='value'),
-     Input(component_id='trend-statistics', component_property='value'),
      Input(component_id='date-picker-select', component_property='start_date'),
      Input(component_id='date-picker-select', component_property='end_date'),
      Input(component_id='age-selections', component_property='value'),
@@ -493,8 +492,8 @@ def rolling_trends(morbidity, time_span, start_date, end_date, age, sex, race, t
      Input(component_id='race-select', component_property='value'),
      Input(component_id='tabs-select', component_property='value'),
      ])
-def bar_functions(morbidity, time_span, start_date, end_date, age, sex, race, tabs):
-    filtered_df = filter_data_by_date_range(df_no_covid, start_date, end_date, tabs)
+def bar_functions(morbidity, start_date, end_date, age, sex, race, tabs):
+    filtered_df = filter_data_by_date_range(df_no_covid, start_date, end_date)
 
     filtered_data_bar = filtered_df.groupby(['AGE_GROUP', 'RACE', 'GENDER', 'GENERAL_MORBIDITY', 'TOTAL_POP'])[
         'CASE_NUMBER'].nunique().reset_index()
