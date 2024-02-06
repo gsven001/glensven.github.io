@@ -298,11 +298,11 @@ app.layout = html.Div(
     ])
 
 
-def filter_data_by_date_range(df, start_date, end_date, tabs):
+def filter_data_by_date_range(df, start_date, end_date):
     date_filter = (pd.to_datetime(df['DATE_OF_DEATH']) >= pd.to_datetime(start_date)) & (
             pd.to_datetime(df['DATE_OF_DEATH']) <= pd.to_datetime(end_date))
 
-    return df_no_covid[date_filter] if tabs == 'Per Capita' else df_no_covid[date_filter]
+    return df_no_covid[date_filter]
 
 
 @app.callback(
@@ -317,7 +317,7 @@ def filter_data_by_date_range(df, start_date, end_date, tabs):
      Input(component_id='tabs-select', component_property='value'),
      ])
 def rolling_trends(morbidity, time_span, start_date, end_date, age, sex, race, tabs):
-    filtered_df = filter_data_by_date_range(df_covid, start_date, end_date, tabs)
+    filtered_df = filter_data_by_date_range(df_covid, start_date, end_date)
 
     filtered_data = \
         filtered_df.groupby(['DATE_OF_DEATH', 'AGE_GROUP', 'RACE', 'GENDER', 'GENERAL_MORBIDITY', 'TOTAL_POP'])[
